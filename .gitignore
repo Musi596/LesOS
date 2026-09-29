@@ -1,4 +1,4 @@
-/boot.bin
-/kernel.o
-/kernel.bin
-/lesos.img
+boot.bin
+kernel.o
+kernel.bin
+lesos.img
