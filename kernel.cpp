@@ -28,6 +28,13 @@ static volatile unsigned short* const video =
 static unsigned int cursor = 0;
 static unsigned int line_start = 0;
 
+static void update_cursor() {
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, static_cast<unsigned char>(cursor));
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, static_cast<unsigned char>(cursor >> 8));
+}
+
 static void put_char(char c) {
     if (c == '\n') {
         cursor = (cursor / 80 + 1) * 80;
@@ -43,6 +50,7 @@ static void put_char(char c) {
         for (unsigned int i = 0; i < 80 * 25; ++i) video[i] = 0x0F20;
         cursor = 0;
     }
+    update_cursor();
 }
 
 static void prompt() {
@@ -61,7 +69,7 @@ static char key_to_ascii(unsigned char code) {
     return code < sizeof(keys) ? keys[code] : 0;
 }
 
-extern "C" [[noreturn]] void _start() {
+extern "C" __attribute__((section(".text.entry"), noreturn)) void _start() {
     serial_init();
     for (unsigned int i = 0; i < 80 * 25; ++i) video[i] = 0x0F20;
     prompt();
