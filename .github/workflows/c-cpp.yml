@@ -8,16 +8,32 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: configure
-      run: ./configure
-    - name: make
+
+    - name: install toolchain
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y nasm g++-multilib binutils
+
+    - name: build
       run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+
+    - name: verify boot sector signature
+      run: |
+        test "$(wc -c < boot.bin)" -eq 512
+        test "$(xxd -p -l 2 -s 510 boot.bin)" = "55aa"
+
+    - name: verify kernel size
+      run: |
+        size=$(wc -c < kernel.bin)
+        echo "kernel.bin: $size bytes (limit 16384)"
+        test "$size" -le 16384
+
+    - name: verify disk image size
+      run: |
+        size=$(wc -c < lesos.img)
+        echo "lesos.img: $size bytes (expected 1474560)"
+        test "$size" -eq 1474560
